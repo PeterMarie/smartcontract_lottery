@@ -33,12 +33,11 @@ contract Lottery {
 
     }
 
-    function getEntranceFee() public returns(uint){
+    function getEntranceFee() public view returns(uint){
         (, int price, , , ) = ETHUSDPriceFeed.latestRoundData();
         uint adjustedPrice = uint(price) * (10**10);
-        uint entranceFeeInUSD = 50 * (10**18);
         uint precision = 1 * (10**18);
-        uint entranceFeeInWei = entranceFeeInUSD / adjustedPrice;
+        uint entranceFeeInWei = (USDEntrance_fee * precision) / adjustedPrice;
         return entranceFeeInWei;
     }
 }
