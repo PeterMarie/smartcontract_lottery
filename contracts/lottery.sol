@@ -1,34 +1,90 @@
-//  SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.9.0;
 
-/// @title A title that should describe the contract/interface
-/// @author The name of the author
-/// @notice Explain to an end user what this does
-/// @dev Explain to a developer any extra details
-
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
+import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 
-contract Lottery {
+contract Lottery is VRFConsumerBaseV2 {
+    
     address payable[] public players;
-    mapping(address=>uint) addresstoamountfunded;
     uint public USDEntrance_fee;
     AggregatorV3Interface internal ETHUSDPriceFeed;
+    uint public fee;
+    bytes32 public keyHash;
+    address payable public winner;
+    address public owner;
 
-    constructor(address _priceFeedAddress) public{
+    VRFCoordinatorV2Interface COORDINATOR;
+    //address vrfCoordinator = 0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D;
+    uint64 s_subscriptionId = 396;
+    uint16 requestConfirmations = 3;
+    uint32 callbackGasLimit = 100000;
+    uint32 numWords = 1 ;
+    uint public s_requestId;
+    uint256[] public s_randomWords;
+
+    enum LOTTERY_STATE {
+        OPEN,
+        CLOSED,
+        CALCULATING_WINNER
+    }
+    LOTTERY_STATE public lottery_state;
+
+  constructor(
+        uint64 subscriptionId,
+        address _priceFeedAddress,
+        address _VRFCoordinator,
+        bytes32 _keyhash
+    ) VRFConsumerBaseV2(_VRFCoordinator) {
+        COORDINATOR = VRFCoordinatorV2Interface(_VRFCoordinator);
+        owner = msg.sender;
+        s_subscriptionId = subscriptionId;
         ETHUSDPriceFeed = AggregatorV3Interface(_priceFeedAddress);
         USDEntrance_fee = 50 * (10**18);
+        keyHash = _keyhash;
+        lottery_state = LOTTERY_STATE.CLOSED;
+  }
+
+    function startLottery() public onlyOwner {
+        require(lottery_state == LOTTERY_STATE.CLOSED, "One Lottery Contract has already been opened!");
+        lottery_state = LOTTERY_STATE.OPEN;
     }
 
-    function startLottery() public {
-
+    function endLottery() public onlyOwner {
+        require(lottery_state == LOTTERY_STATE.OPEN, "One Lottery Contract has already been opened!");
+        lottery_state = LOTTERY_STATE.CALCULATING_WINNER;
+        requestRandomWords();
     }
 
-    function endLottery() public {
+  // Assumes the subscription is funded sufficiently.
+  function requestRandomWords() public onlyOwner {
+    // Will revert if subscription is not set and funded.
+    s_requestId = COORDINATOR.requestRandomWords(
+      keyHash,
+      s_subscriptionId,
+      requestConfirmations,
+      callbackGasLimit,
+      numWords
+    );
+  }
 
-    }
-
+  function fulfillRandomWords(
+    uint256, /* requestId */
+    uint256[] memory randomWords
+  ) internal override {
+    s_randomWords = randomWords;
+        require(lottery_state == LOTTERY_STATE.CALCULATING_WINNER, "Not yet time");
+        require(randomWords.length > 0, "Randomness incorrect");
+        uint indexOfWinner = randomWords[0] % players.length;
+        winner = players[indexOfWinner];
+        winner.transfer(address(this).balance);
+        players = new address payable[](0);
+        lottery_state = LOTTERY_STATE.CLOSED;
+  }
+  
     function enter() public payable returns(uint){
-        require(msg.value == getEntranceFee(), "Entrance Fee is $50!");
+        require(msg.value >= getEntranceFee(), "Entrance Fee is $50!");
         players.push(payable(msg.sender));
 
     }
@@ -40,4 +96,10 @@ contract Lottery {
         uint entranceFeeInWei = (USDEntrance_fee * precision) / adjustedPrice;
         return entranceFeeInWei;
     }
+    
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
 }
+
