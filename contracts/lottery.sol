@@ -4,8 +4,9 @@ pragma solidity >=0.6.0 <0.9.0;
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Lottery is VRFConsumerBaseV2 {
+contract Lottery is VRFConsumerBaseV2, Ownable {
     
     address payable[] public players;
     uint public USDEntrance_fee;
@@ -13,10 +14,8 @@ contract Lottery is VRFConsumerBaseV2 {
     uint public fee;
     bytes32 public keyHash;
     address payable public winner;
-    address public owner;
 
     VRFCoordinatorV2Interface COORDINATOR;
-    //address vrfCoordinator = 0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D;
     uint64 s_subscriptionId = 396;
     uint16 requestConfirmations = 3;
     uint32 callbackGasLimit = 100000;
@@ -35,13 +34,13 @@ contract Lottery is VRFConsumerBaseV2 {
         uint64 subscriptionId,
         address _priceFeedAddress,
         address _VRFCoordinator,
-        bytes32 _keyhash
+        bytes32 _keyhash,
+        uint _entrance_fee
     ) VRFConsumerBaseV2(_VRFCoordinator) {
         COORDINATOR = VRFCoordinatorV2Interface(_VRFCoordinator);
-        owner = msg.sender;
         s_subscriptionId = subscriptionId;
         ETHUSDPriceFeed = AggregatorV3Interface(_priceFeedAddress);
-        USDEntrance_fee = 50 * (10**18);
+        USDEntrance_fee = _entrance_fee * (10**18);
         keyHash = _keyhash;
         lottery_state = LOTTERY_STATE.CLOSED;
   }
@@ -97,9 +96,5 @@ contract Lottery is VRFConsumerBaseV2 {
         return entranceFeeInWei;
     }
     
-  modifier onlyOwner() {
-    require(msg.sender == owner);
-    _;
-  }
 }
 
