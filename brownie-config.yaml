@@ -16,22 +16,27 @@ compiler:
       - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.4.1"
 
 networks:
-  default: "mainnet-fork-dev"
+  default: "development"
   development:
+    keyhash: "0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15"
     verify: False
   ganache-local:
     verify: False
   rinkeby:
     verify: True
     eth_usd_price_feed: "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
+    vrf_coordinator: "0x6168499c0cFfCaCD319c818142124B7A15E857ab"
+    keyhash: "0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc"
   goerli:
     verify: True
     eth_usd_price_feed: "0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e"
+    vrf_coordinator: "0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D"
+    keyhash: "0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15"
   mainnet-fork-dev:
     verify: False
     eth_usd_price_feed: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"
+    vrf_coordinator: "0x271682DEB8C4E0901D1a1550aD2e64D568E69909"
+    keyhash: "0x8af398995b04c28e9951adb9721ef74c74f93e6a478f39e7e0777be13527e7ef"
 
 chainlink:
   subscription_id: ${VRF_SUBSCRIPTION_ID}
-  vrf_coordinator: "0x2Ca8E0C643bDe4C2E08ab1fA0da3401AdAD7734D"
-  keyhash: "0x79d3d8832d904592c0bf9818b621522c988bb8b0c05cdc3b15aea1b6e8db0c15"

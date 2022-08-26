@@ -11,7 +11,6 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
     address payable[] public players;
     uint public USDEntrance_fee;
     AggregatorV3Interface internal ETHUSDPriceFeed;
-    uint public fee;
     bytes32 public keyHash;
     address payable public winner;
 
@@ -83,6 +82,7 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
   }
   
     function enter() public payable returns(uint){
+        require(lottery_state == LOTTERY_STATE.OPEN, "Lottery is NOT open");
         require(msg.value >= getEntranceFee(), "Entrance Fee is $50!");
         players.push(payable(msg.sender));
 

@@ -30,15 +30,18 @@ def deploy_mocks(contract_name):
     match contract_name:
         case 'eth_usd_price_feed':
             contract_type.deploy(DECIMALS, STARTING_VALUE, {"from": account})
+        case 'vrf_coordinator':
+            contract_type.deploy(250000, 20, {"from": account})
         case _:
             pass
+    print('Mock Deployed!')
 
 def get_contract(contract_name):
     if(network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS):
         contract_type = contract_to_mock[contract_name]
-        print(len(contract_type))
+        #print(f"Contract {contract_type} has been run {len(contract_type)} times")
         if(len(contract_type) <= 0):
-            print("Deploying...")
+            print(f"Deploying {contract_name} Mock contract...")
             deploy_mocks(contract_name)
             return contract_type[-1]
         return contract_type[-1]
@@ -57,8 +60,7 @@ def get_price_feed():
   
 
 def get_verify():
-    return config["networks"][network.show_active()].get("verify")
+    return config["networks"][network.show_active()].get("verify", False)
 
-def get_vrf_variables():
-    return config["chainlink"]
+
 
