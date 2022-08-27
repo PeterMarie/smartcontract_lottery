@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Lottery is VRFConsumerBaseV2, Ownable {
     
     address payable[] public players;
+    mapping(address=>uint) public senderaddresstoamontvalue;
     uint public USDEntrance_fee;
     AggregatorV3Interface internal ETHUSDPriceFeed;
     bytes32 public keyHash;
@@ -18,7 +19,7 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
     uint64 s_subscriptionId = 396;
     uint16 requestConfirmations = 3;
     uint32 callbackGasLimit = 100000;
-    uint32 numWords = 1 ;
+    uint32 numWords = 2;
     uint public s_requestId;
     uint256[] public s_randomWords;
 
@@ -28,6 +29,8 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         CALCULATING_WINNER
     }
     LOTTERY_STATE public lottery_state;
+
+    event requestedRandomWords(uint requestId);
 
   constructor(
         uint64 subscriptionId,
@@ -53,6 +56,7 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         require(lottery_state == LOTTERY_STATE.OPEN, "One Lottery Contract has already been opened!");
         lottery_state = LOTTERY_STATE.CALCULATING_WINNER;
         requestRandomWords();
+        emit requestedRandomWords(s_requestId);
     }
 
   // Assumes the subscription is funded sufficiently.
@@ -78,14 +82,18 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         winner = players[indexOfWinner];
         winner.transfer(address(this).balance);
         players = new address payable[](0);
+        for (uint i = 0; i < players.length; i++){
+          address player = players[i];
+          delete senderaddresstoamontvalue[player];
+        }
         lottery_state = LOTTERY_STATE.CLOSED;
   }
   
-    function enter() public payable returns(uint){
+    function enter() public payable {
         require(lottery_state == LOTTERY_STATE.OPEN, "Lottery is NOT open");
         require(msg.value >= getEntranceFee(), "Entrance Fee is $50!");
         players.push(payable(msg.sender));
-
+        senderaddresstoamontvalue[msg.sender] += msg.value;
     }
 
     function getEntranceFee() public view returns(uint){
@@ -96,5 +104,15 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         return entranceFeeInWei;
     }
     
+    function resetLottery() public onlyOwner {
+        lottery_state = LOTTERY_STATE.CLOSED;
+        //return money to entrants
+        for(uint i = 0; i < players.length; i++){
+          address payable player = players[i];
+          player.transfer(senderaddresstoamontvalue[player]);
+          delete senderaddresstoamontvalue[player];
+        }
+        players = new address payable[](0);
+    }
 }
 

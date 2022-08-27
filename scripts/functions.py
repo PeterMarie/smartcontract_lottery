@@ -37,8 +37,8 @@ def deploy_mocks(contract_name):
     print('Mock Deployed!')
 
 def get_contract(contract_name):
+    contract_type = contract_to_mock[contract_name]
     if(network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS):
-        contract_type = contract_to_mock[contract_name]
         #print(f"Contract {contract_type} has been run {len(contract_type)} times")
         if(len(contract_type) <= 0):
             print(f"Deploying {contract_name} Mock contract...")
