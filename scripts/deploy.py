@@ -28,11 +28,11 @@ def enter():
     txn.wait(1)
     txn2 = contract.enter({"from": account, "value": entrance_fee})
     txn2.wait(1)
-    """txn3 = contract.enter({"from": func.get_account(index=1), "value": entrance_fee})
+    txn3 = contract.enter({"from": func.get_account(index=1), "value": entrance_fee})
     txn3.wait(1)
     txn4 = contract.enter({"from": func.get_account(index=2), "value": entrance_fee})
-    txn4.wait(1)"""
-    print(f"You have entered the lottery with $50")
+    txn4.wait(1)
+    #print(f"You have entered the lottery with $50")
 
 def end():
     account = func.get_account()
@@ -41,9 +41,10 @@ def end():
     sub_id_txn = vrf_contract.createSubscription({"from": account})
     sub_id_txn.wait(1)
     sub_id = sub_id_txn.events["SubscriptionCreated"]["subId"]
-    fund_amount_link = 3000000000000000000
+    fund_amount_link = 300000000000000000000
     fund_vrf_txn = vrf_contract.fundSubscription(sub_id, fund_amount_link, {"from": account})
     fund_vrf_txn.wait(1)
+    print(f"Old lottery balance: {contract.balance()}")
     txn5 = contract.endLottery(sub_id, vrf_contract.address, {"from": account})
     txn5.wait(1)
     request_id = txn5.events["requestedRandomWords"]["requestId"]
@@ -52,9 +53,10 @@ def end():
     randomWords = fulfill_txn.events["RandomWordsFulfilled"]["success"]
     print(f"Success is {randomWords}")
     #time.sleep(60)
+    print(f"New lottery balance: {contract.balance()}")
     print("Lottery ended!")
     #print(f"Randomwords is {contract.s_randomWords(0)}")
-    #print(f"{contract.winner()} is the new Winner!")
+    print(f"{contract.winner()} is the new Winner!")
 
 def main():
     deploy()

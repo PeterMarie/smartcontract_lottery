@@ -31,7 +31,7 @@ def deploy_mocks(contract_name):
         case 'eth_usd_price_feed':
             contract_type.deploy(DECIMALS, STARTING_VALUE, {"from": account})
         case 'vrf_coordinator':
-            contract_type.deploy(250000, 20, {"from": account})
+            contract_type.deploy(25000000000000000, 1000000000, {"from": account})
         case _:
             pass
     print('Mock Deployed!')

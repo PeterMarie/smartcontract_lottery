@@ -14,12 +14,13 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
     AggregatorV3Interface internal ETHUSDPriceFeed;
     bytes32 public keyHash;
     address payable public winner;
+    address VRFCoordinator;
 
     VRFCoordinatorV2Interface COORDINATOR;
     uint64 s_subscriptionId = 396;
     uint16 requestConfirmations = 3;
-    uint32 callbackGasLimit = 100000;
-    uint32 numWords = 2;
+    uint32 callbackGasLimit = 1000000;
+    uint32 numWords = 1;
     uint public s_requestId;
     uint256[] public s_randomWords;
 
@@ -39,6 +40,7 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         bytes32 _keyhash,
         uint _entrance_fee
     ) VRFConsumerBaseV2(_VRFCoordinator) {
+        VRFCoordinator = _VRFCoordinator;
         COORDINATOR = VRFCoordinatorV2Interface(_VRFCoordinator);
         s_subscriptionId = subscriptionId;
         ETHUSDPriceFeed = AggregatorV3Interface(_priceFeedAddress);
@@ -52,8 +54,11 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         lottery_state = LOTTERY_STATE.OPEN;
     }
 
-    function endLottery() public onlyOwner {
+    function endLottery(uint64 _sub_id, address _vrf_coordinator) public onlyOwner {
         require(lottery_state == LOTTERY_STATE.OPEN, "One Lottery Contract has already been opened!");
+        VRFCoordinator = _vrf_coordinator;
+        COORDINATOR = VRFCoordinatorV2Interface(_vrf_coordinator);
+        s_subscriptionId = _sub_id;
         lottery_state = LOTTERY_STATE.CALCULATING_WINNER;
         requestRandomWords();
         emit requestedRandomWords(s_requestId);
@@ -114,5 +119,6 @@ contract Lottery is VRFConsumerBaseV2, Ownable {
         }
         players = new address payable[](0);
     }
+    
 }
 

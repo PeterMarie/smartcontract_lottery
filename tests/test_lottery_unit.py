@@ -73,9 +73,8 @@ def test_can_pick_winner():
     request_id = txn5.events["requestedRandomWords"]["requestId"]
     fulfill_txn = vrf_contract.fulfillRandomWords(request_id, contract.address, {"from": account})
     fulfill_txn.wait(1)
-    randomWords = fulfill_txn.events["RandomWordsFulfilled"]["outputSeed"]
-    fulfill_lottery = contract.fulfillRandomWords(request_id, randomWords, {"from": account})
-    fulfill_lottery.wait(1)
+    winner = contract.winner()
+    print(f"winner is {winner}!")
     assert contract.balance() == 0
     
 def test_reset_lottery():

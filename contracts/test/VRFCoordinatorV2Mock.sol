@@ -24,7 +24,7 @@ contract VRFCoordinatorV2Mock is VRFCoordinatorV2Interface {
     uint32 numWords,
     address indexed sender
   );
-  event RandomWordsFulfilled(uint256 indexed requestId, uint256 outputSeed, uint96 payment, bool success);
+  event RandomWordsFulfilled(uint256 indexed requestId, uint256 outputSeed, uint96 payment, bool success, uint word);
   event SubscriptionCreated(uint64 indexed subId, address owner);
   event SubscriptionFunded(uint64 indexed subId, uint256 oldBalance, uint256 newBalance);
   event SubscriptionCanceled(uint64 indexed subId, address to, uint256 amount);
@@ -67,15 +67,17 @@ contract VRFCoordinatorV2Mock is VRFCoordinatorV2Interface {
       revert("nonexistent request");
     }
     Request memory req = s_requests[_requestId];
+    uint retWord;
 
     uint256[] memory words = new uint256[](req.numWords);
     for (uint256 i = 0; i < req.numWords; i++) {
       words[i] = uint256(keccak256(abi.encode(_requestId, i)));
+      retWord = words[i];
     }
 
     VRFConsumerBaseV2 v;
     bytes memory callReq = abi.encodeWithSelector(v.rawFulfillRandomWords.selector, _requestId, words);
-    (bool success, ) = address(_consumer).staticcall{gas: req.callbackGasLimit}(callReq);
+    (bool success, ) = _consumer.call{gas: req.callbackGasLimit}(callReq);
 
     uint96 payment = uint96(BASE_FEE + ((startGas - gasleft()) * GAS_PRICE_LINK));
     if (s_subscriptions[req.subId].balance < payment) {
@@ -83,7 +85,7 @@ contract VRFCoordinatorV2Mock is VRFCoordinatorV2Interface {
     }
     s_subscriptions[req.subId].balance -= payment;
     delete (s_requests[_requestId]);
-    emit RandomWordsFulfilled(_requestId, _requestId, payment, success);
+    emit RandomWordsFulfilled(_requestId, _requestId, payment, success, retWord);
   }
 
   /**

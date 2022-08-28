@@ -10,8 +10,8 @@ def test_can_pick_winner():
     if(network.show_active() in func.LOCAL_BLOCKCHAIN_ENVIRONMENTS):
         pytest.skip("NOT for Local Testing")
     account = func.get_account()
-    #contract = lottery.deploy()
-    contract = Contract.from_abi(Lottery._name, '0x942da7A77312c1a7216ddbe7B7F351DAAb183119', Lottery.abi)
+    contract = lottery.deploy()
+    #contract = Contract.from_abi(Lottery._name, '0x942da7A77312c1a7216ddbe7B7F351DAAb183119', Lottery.abi)
     #print(contract.lottery_state())
     #time.sleep(120)
     txn = contract.startLottery({"from": account})
